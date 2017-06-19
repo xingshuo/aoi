@@ -1,11 +1,13 @@
-CFLAGS = -g -Wall
+CFLAGS = -g -O2 -Wall
 SHARED := -fPIC --shared
+INC = include
+SRC = src
 
-aoi.so: aoi.c
-	gcc $(CFLAGS) $(SHARED) $^ -o $@
+aoi.so: $(SRC)/lua-aoi.c $(SRC)/aoi.c
+	gcc $(CFLAGS) $(SHARED) $^ -o $@ -I$(INC)
 
 run:
-	lua test.lua
+	bin/lua test.lua
 
 clean:
 	rm aoi.so

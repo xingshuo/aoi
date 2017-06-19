@@ -44,21 +44,26 @@ end
 local Scene = {}
 Scene.__index = Scene
 
-function Scene:new()
+function Scene:new(mArgs)
     local o = {}
     setmetatable(o, self)
-    o:init()
+    o:init(mArgs)
     return o
 end
 
-function Scene:init()
+function Scene:init(mArgs)
     self.m_Objects = {}
-    self.m_MaxX = 100
-    self.m_MaxZ = 100
-    self.m_ViewX = 10
-    self.m_ViewZ = 10
-    self.m_ViewGrid = 1
+    self.m_MaxX = mArgs.max_x
+    self.m_MaxZ = mArgs.max_z
+    self.m_ViewX = mArgs.view_x
+    self.m_ViewZ = mArgs.view_z
+    self.m_ViewGrid = mArgs.view_grid
     self.m_CAoiMgr = aoi.create(self.m_MaxX,self.m_MaxZ,self.m_ViewX,self.m_ViewZ,self.m_ViewGrid)
+    print(sFmt("---create %s---",self:desc()))
+end
+
+function Scene:desc()
+    return sFmt("[Scene Max_x:%d max_z:%d view_x:%d view_z:%d view_grid:%d]",self.m_MaxX,self.m_MaxZ,self.m_ViewX,self.m_ViewZ,self.m_ViewGrid)
 end
 
 function Scene:get_obj(id)
@@ -126,8 +131,8 @@ end
 
 local M = {}
 
-function M.new()
-    return Scene:new()
+function M.new_scene(mArgs)
+    return Scene:new(mArgs)
 end
 
 return M

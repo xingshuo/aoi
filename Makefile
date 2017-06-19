@@ -1,4 +1,4 @@
-CFLAGS = -g3 -O2 -Wall
+CFLAGS = -g3 -O0 -Wall
 SHARED := -fPIC --shared
 INC = include
 SRC = src

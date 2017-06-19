@@ -36,15 +36,15 @@ aoi_add(lua_State* L) {
     if (obj) {
         return 0;
     }
-    obj = map_init_object(m, id);
-    obj->x = x;
-    obj->z = z;
     int row = z/m->view_z;
     int col = x/m->view_x;
     tower *t = get_tower(m, row, col);
     if (!t) {
         return 0;
     }
+    obj = map_init_object(m, id);
+    obj->x = x;
+    obj->z = z;
     insert_obj_to_tower(t, obj);
     lua_newtable(L);
     int i,j;

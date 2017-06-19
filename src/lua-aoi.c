@@ -59,8 +59,9 @@ aoi_add(lua_State* L) {
             object* pCur = t->pHead->pNext;
             while (pCur != t->pHead) {
                 if (pCur->id != id) {
+                    lua_pushinteger(L,pCur->id);
                     lua_pushinteger(L,1);
-                    lua_rawseti(L,-2,pCur->id);
+                    lua_rawset(L,-3);
                 }
                 pCur = pCur->pNext;
             }
@@ -113,8 +114,9 @@ aoi_update(lua_State* L) {
                 object* pCur = t->pHead->pNext;
                 while (pCur != t->pHead) {
                     if (pCur->id != id) {
+                        lua_pushinteger(L,pCur->id);
                         lua_pushinteger(L,1);
-                        lua_rawseti(L,-2,pCur->id);
+                        lua_rawset(L,-3);
                     }
                     pCur = pCur->pNext;
                 }
@@ -137,8 +139,9 @@ aoi_update(lua_State* L) {
                 object* pCur = t->pHead->pNext;
                 while (pCur != t->pHead) {
                     if (pCur->id != id) {
+                        lua_pushinteger(L,pCur->id);
                         lua_pushinteger(L,1);
-                        lua_rawseti(L,-2,pCur->id);
+                        lua_rawset(L,-3);
                     }
                     pCur = pCur->pNext;
                 }
@@ -172,8 +175,9 @@ aoi_delete(lua_State* L) {
             object* pCur = t->pHead->pNext;
             while (pCur != t->pHead) {
                 if (pCur->id != id) {
+                    lua_pushinteger(L,pCur->id);
                     lua_pushinteger(L,1);
-                    lua_rawseti(L,-2,pCur->id);
+                    lua_rawset(L,-3);
                 }
                 pCur = pCur->pNext;
             }
@@ -207,8 +211,9 @@ aoi_get_pos_nearby_objs(lua_State* L) {
             }
             object* pCur = t->pHead->pNext;
             while (pCur != t->pHead) {
+                lua_pushinteger(L,pCur->id);
                 lua_pushinteger(L,1);
-                lua_rawseti(L,-2,pCur->id);
+                lua_rawset(L,-3);
                 pCur = pCur->pNext;
             }
         }
@@ -239,8 +244,9 @@ aoi_get_obj_nearby_objs(lua_State* L) {
             }
             object* pCur = t->pHead->pNext;
             while (pCur != t->pHead) {
+                lua_pushinteger(L,pCur->id);
                 lua_pushinteger(L,1);
-                lua_rawseti(L,-2,pCur->id);
+                lua_rawset(L,-3);
                 pCur = pCur->pNext;
             }
         }
@@ -272,8 +278,9 @@ aoi_get_objs_nearby_objs(lua_State* L) {
                     }
                     object* pCur = t->pHead->pNext;
                     while (pCur != t->pHead) {
+                        lua_pushinteger(L,pCur->id);
                         lua_pushinteger(L,1);
-                        lua_rawseti(L,-4,pCur->id);
+                        lua_rawset(L,-5);
                         pCur = pCur->pNext;
                     }
                 }

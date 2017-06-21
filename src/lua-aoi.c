@@ -92,9 +92,12 @@ aoi_update(lua_State* L) {
     if (new_row == old_row && new_col == old_col) {
         return 0;
     }
-    delete_obj_from_tower(NULL, obj);
-
+    
     tower* new_t = get_tower(m, new_row, new_col);
+    if (!new_t) {
+        return 0;
+    }
+    delete_obj_from_tower(NULL, obj);
     insert_obj_to_tower(new_t, obj);
 
     lua_newtable(L); //the return table

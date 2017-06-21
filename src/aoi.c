@@ -20,12 +20,14 @@ new_object(map * m, uint64_t id) {
     object * obj = malloc(sizeof(*obj));
     obj->id = id;
     obj->pTower = NULL;
+    obj->pPrev = NULL;
+    obj->pNext = NULL;
     return obj;
 }
 
 static inline slot *
 mainposition(map *m , uint64_t id) {
-    uint64_t hash = id & (m->size-1);
+    int hash = id & (m->size-1);
     return &m->slot_list[hash];
 }
 
@@ -100,6 +102,7 @@ get_tower(map * m, int row, int col) {
         return NULL;
     }
     int index = row*m->max_col + col;
+    assert(index < (m->max_row*m->max_col));
     if (m->tower_list[index] == NULL) {
         m->tower_list[index] = new_tower(row, col);
     }
@@ -183,8 +186,14 @@ map_new(int max_x, int max_z, int view_x, int view_z, int aoi_r){
     map * m = malloc(sizeof(*m));
     m->size = PRE_ALLOC;
     m->lastfree = PRE_ALLOC - 1;
-    m->max_row = ceil(max_z/view_z);
-    m->max_col = ceil(max_x/view_x);
+    m->max_row = max_z/view_z;
+    if (max_z%view_z != 0){
+        m->max_row += 1;
+    }
+    m->max_col = max_x/view_x;
+    if (max_x%view_x != 0){
+        m->max_col += 1;
+    }
     m->view_x = view_x;
     m->view_z = view_z;
     m->aoi_r = aoi_r;
@@ -214,12 +223,6 @@ map_delete(map* m){
     for(i=0; i<m->max_row*m->max_col; i++){
         if (m->tower_list[i]){
             object* pHead = m->tower_list[i]->pHead;
-            object* pCur = pHead->pNext;
-            while (pCur != pHead) {
-                object* temp = pCur;
-                pCur = pCur->pNext;
-                free(temp);
-            }
             free(pHead);
             free(m->tower_list[i]);
         }

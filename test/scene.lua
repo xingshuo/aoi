@@ -1,5 +1,5 @@
 local aoi = require "aoi"
-
+local lua_aoi = require "lua_aoi"
 local sFmt = string.format 
 
 local Object = {}
@@ -58,7 +58,11 @@ function Scene:init(mArgs)
     self.m_ViewX = mArgs.view_x
     self.m_ViewZ = mArgs.view_z
     self.m_ViewGrid = mArgs.view_grid
-    self.m_CAoiMgr = aoi.create(self.m_MaxX,self.m_MaxZ,self.m_ViewX,self.m_ViewZ,self.m_ViewGrid)
+    if mArgs.aoi_type == "lua" then
+        self.m_CAoiMgr = lua_aoi.create(self.m_MaxX,self.m_MaxZ,self.m_ViewX,self.m_ViewZ,self.m_ViewGrid)
+    else
+        self.m_CAoiMgr = aoi.create(self.m_MaxX,self.m_MaxZ,self.m_ViewX,self.m_ViewZ,self.m_ViewGrid)
+    end
     print(sFmt("---create %s---",self:desc()))
 end
 

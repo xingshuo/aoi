@@ -123,9 +123,7 @@ end
 
 function Scene:release()
     print("---scene release----")
-    for id,obj in pairs(self.m_Objects) do
-        self:del_obj(id)
-    end
+    self.m_Objects = {}
     self.m_CAoiMgr = nil
 end
 

@@ -1,4 +1,4 @@
-# aoi  
-For test
-=========  
-    make run
+# aoi of checker
+Wiki
+=========
+    make help

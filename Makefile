@@ -1,4 +1,4 @@
-CFLAGS = -g3 -O0 -Wall
+CFLAGS = -g3 -Wall
 SHARED := -fPIC --shared
 INC = include
 SRC = src
@@ -8,13 +8,13 @@ $(BUILD)/aoi.so: $(SRC)/lua-aoi.c $(SRC)/aoi.c
 	gcc $(CFLAGS) $(SHARED) $^ -o $@ -I$(INC)
 
 help:
-	@echo "make test1 --single test"
-	@echo "make test2 --multi test"
+	@echo "make --generate the build/aoi.so"
+	@echo "make clean --delete the build/aoi.so"
+	@echo "make test1 --run test/test1.lua"
+	@echo "make test2 --run test/test2.lua"
 
-test1:
-	bin/lua test/test1.lua
-test2:
-	bin/lua test/test2.lua
+test1 test2:
+	bin/lua test/$@.lua
 
 clean:
 	rm $(BUILD)/aoi.so

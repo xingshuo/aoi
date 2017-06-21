@@ -164,7 +164,7 @@ map_query_object(map * m, uint64_t id){
 
 object *
 delete_object(map *m, uint64_t id){
-    uint64_t hash = id & (m->size-1);
+    int hash = id & (m->size-1);
     slot *s = &m->slot_list[hash];
     for (;;) {
         if (s->id == id) {

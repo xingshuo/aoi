@@ -49,7 +49,7 @@ function AoiMgr:init(max_x, max_z, view_x, view_z, view_grid)
     self.uuid_tbl = {}
 end
 
-function Aoi:get_tower(row, col)
+function AoiMgr:get_tower(row, col)
     local key = row*self.max_col + col
     if not self.tower_tbl[key] then
         self.tower_tbl[key] = AoiTower:new(row, col)
@@ -77,7 +77,7 @@ function AoiMgr:add(id, x, z)
     return enter_tbl
 end
 
-function AoiTower:update(id, x, z)
+function AoiMgr:update(id, x, z)
     local new_row = z // self.view_z
     local new_col = x // self.view_x
     local oTower = assert(self.uuid_tbl[id])
@@ -109,8 +109,8 @@ function AoiTower:update(id, x, z)
     local enter_tbl = {}
     for i=-self.aoi_grid,self.aoi_grid do
         for j=-self.aoi_grid,self.aoi_grid do
-            local r = old_row + i
-            local c = old_col + j
+            local r = new_row + i
+            local c = new_col + j
             local t = self:get_tower(r, c)
             if math.abs(old_row - r)>self.aoi_grid or math.abs(old_col - c)>self.aoi_grid then
                 local t = self:get_tower(r, c)
@@ -148,6 +148,8 @@ function AoiMgr:release()
     self.uuid_tbl = {}
 end
 
+local M = {}
 function M.create(max_x, max_z, view_x, view_z, view_grid)
     return AoiMgr:new(max_x, max_z, view_x, view_z, view_grid)
 end
+return M

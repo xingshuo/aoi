@@ -4,7 +4,12 @@ INC = include
 SRC = src
 BUILD = build
 
+all: $(BUILD)/aoi.so $(BUILD)/twheel.so
+
 $(BUILD)/aoi.so: $(SRC)/lua-aoi.c $(SRC)/aoi.c
+	gcc $(CFLAGS) $(SHARED) $^ -o $@ -I$(INC)
+
+$(BUILD)/twheel.so: 3rd/twheel.c
 	gcc $(CFLAGS) $(SHARED) $^ -o $@ -I$(INC)
 
 help:

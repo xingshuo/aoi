@@ -7,7 +7,7 @@ local api = require "api"
 
 math.randomseed(os.clock()*10000)
 print(sFmt("===test=start===Memory:%sK",collectgarbage("count")))
-local pos_cnt = 10
+local pos_cnt = 500
 local type_tbl = {
     ["c"] = 1,
     ["lua"] = 2,
@@ -29,10 +29,10 @@ for aoi_type,scid in pairs(type_tbl) do
     }
     local scobj = scene.new_scene(mArgs)
     local t1 = api.gettime()
-    for i,pos in pairs(poslst1) do
+    for i,pos in ipairs(poslst1) do
         scobj:add_obj(i, pos.x, pos.z)
     end
-    for i,pos in pairs(poslst2) do
+    for i,pos in ipairs(poslst2) do
         scobj:move_obj(i, pos.x, pos.z)
     end
     for i=1,pos_cnt do

@@ -95,6 +95,7 @@ function Scene:add_obj(id, x, z)
     self.m_Objects[obj.m_ID] = obj
     g_print(sFmt("\n----%s enter scene---",obj:desc()))
     local ret = self.m_CAoiMgr:add(obj.m_ID, x, z)
+    -- print("enter ",id,x,z,api.table_str(ret or {}))
     if ret then
         for id in pairs(ret) do
             local o = self:get_obj(id)
@@ -111,6 +112,7 @@ function Scene:move_obj(id, x, z)
     g_print(sFmt("\n----%s move to (%d,%d)----",obj:desc(),x,z))
     obj:set_pos(x, z)
     local ret = self.m_CAoiMgr:update(id, x, z)
+    -- print("move ",id,x,z,api.table_str(ret or {}))
     if ret then
         local leave_tbl, enter_tbl = table.unpack(ret)
         for id in pairs(enter_tbl) do
@@ -134,6 +136,7 @@ function Scene:del_obj(id)
     g_print(sFmt("\n----%s leave scene---",obj:desc()))
     self.m_Objects[id] = nil
     local ret = self.m_CAoiMgr:delete(id)
+    -- print("delete aoi",id,api.table_str(ret or {}))
     if ret then
         for oid in pairs(ret) do
             local o = self:get_obj(oid)

@@ -50,7 +50,8 @@ function AoiMgr:init(max_x, max_z, view_x, view_z, view_grid)
 end
 
 function AoiMgr:get_tower(row, col)
-    local key = row*self.max_col + col
+    -- local key = row*self.max_col + col
+    local key = string.format("%s-%s",row,col)
     if not self.tower_tbl[key] then
         self.tower_tbl[key] = AoiTower:new(row, col)
     end

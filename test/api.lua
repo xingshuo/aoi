@@ -48,4 +48,8 @@ function M.gettime()
     return twheel.gettime()
 end
 
+function M.sleep(s)
+    os.execute(string.format("sleep %s",s))
+end
+
 return M

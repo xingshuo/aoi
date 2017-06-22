@@ -7,7 +7,7 @@ local api = require "api"
 
 math.randomseed(os.clock()*10000)
 print(sFmt("===test=start===Memory:%sK",collectgarbage("count")))
-local pos_cnt = 500
+local pos_cnt = 3000
 local type_tbl = {
     ["c"] = 1,
     ["lua"] = 2,
@@ -18,14 +18,15 @@ local poslst2 = api.rnd_pos_lst(100, 100, pos_cnt)
 for aoi_type,scid in pairs(type_tbl) do
     local total_time = 0
     local mArgs = {
-        max_x=100,
-        max_z=100,
-        view_x=10,
-        view_z=10,
+        max_x=137,
+        max_z=206,
+        view_x=13,
+        view_z=13,
         view_grid=1,
         aoi_type = aoi_type,
         silent_notify = 1,
-        scene_id = scid
+        scene_id = scid,
+        sync_interval = 1,
     }
     local scobj = scene.new_scene(mArgs)
     local t1 = api.gettime()
@@ -43,6 +44,8 @@ for aoi_type,scid in pairs(type_tbl) do
     total_time = total_time + t2 - t1
     print(sFmt("----aoi_type: %s pos_cnt %s enter_aoi_cnt %d leave_aoi_cnt %d use time %s----",aoi_type,pos_cnt,scobj.m_EnterAoiCnt,scobj.m_LeaveAoiCnt,total_time))
 end
+poslst1 = nil
+poslst2 = nil
 print("---run gc---")
 collectgarbage("collect")
 print(sFmt("===test=end===Memory:%sK",collectgarbage("count")))

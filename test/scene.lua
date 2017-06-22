@@ -3,6 +3,8 @@ local lua_aoi = require "lua_aoi"
 local api = require "api"
 local sFmt = string.format 
 
+local PKG_SEC = 0.0001
+
 local silent_mark = nil
 function g_print(...)
     if not silent_mark then
@@ -39,10 +41,12 @@ end
 
 function Object:enter_aoi(obj)
     g_print(sFmt("%s enter %s View.",obj:desc(),self:desc()))
+    -- api.sleep(PKG_SEC)
 end
 
 function Object:leave_aoi(obj)
     g_print(sFmt("%s leave %s View.",obj:desc(),self:desc()))
+    -- api.sleep(PKG_SEC)
 end
 
 function Object:desc()
@@ -78,6 +82,7 @@ function Scene:init(mArgs)
     self.m_AoiType = mArgs.aoi_type
     self.m_EnterAoiCnt = 0
     self.m_LeaveAoiCnt = 0
+    self.m_SyncInterval = mArgs.sync_interval
     print(sFmt("---create %s---",self:desc()))
 end
 

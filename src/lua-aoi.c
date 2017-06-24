@@ -188,6 +188,8 @@ aoi_update_multi(lua_State* L) {
             }
             int old_row = obj->pTower->row;
             int old_col = obj->pTower->col;
+            obj->x = x;
+            obj->z = z;
             if (new_row == old_row && new_col == old_col) {
                 lua_pop(L, 1);
                 continue;

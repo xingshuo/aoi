@@ -41,8 +41,6 @@ end
 function Object:init(id, x, z, scobj)
     self.m_ID = id
     self.m_Pos = {x = x, z = z}
-    self.enter_event_tbl = {}
-    self.leave_event_tbl = {}
     self.m_SceneObj = scobj
 end
 
@@ -59,51 +57,13 @@ function Object:set_pos(x, z)
 end
 
 function Object:enter_aoi(uuid, pkg)
-    old_print(sFmt("%s enter %s View.",pkg,self:desc()))
+    -- old_print(sFmt("%s enter %s View.",pkg,self:desc()))
     self.m_SceneObj.m_EnterAoiCnt = self.m_SceneObj.m_EnterAoiCnt + 1
-    self.enter_event_tbl[uuid] = nil
 end
 
 function Object:leave_aoi(uuid, pkg)
-    old_print(sFmt("%s leave %s View.",pkg,self:desc()))
+    -- old_print(sFmt("%s leave %s View.",pkg,self:desc()))
     self.m_SceneObj.m_LeaveAoiCnt = self.m_SceneObj.m_LeaveAoiCnt + 1
-    self.leave_event_tbl[uuid] = nil
-end
-
-function Object:push_event(sType, obj)
-    if sType == "enter_aoi" then
-        if self.leave_event_tbl[obj.m_ID] then
-            self.leave_event_tbl[obj.m_ID] = nil
-            -- print(sFmt("%s push_event %s %s 0",self:desc(),sType,obj.m_ID))
-            return
-        end
-        self.enter_event_tbl[obj.m_ID] = obj:desc()
-    else
-        if self.enter_event_tbl[obj.m_ID] then
-            self.enter_event_tbl[obj.m_ID] = nil
-            -- print(sFmt("%s push_event %s %s 0",self:desc(),sType,obj.m_ID))
-            return
-        end
-        self.leave_event_tbl[obj.m_ID] = obj:desc()
-    end
-    -- print(sFmt("%s push_event %s %s 1",self:desc(),sType,obj.m_ID))
-end
-
-function Object:handle_event()
-    local enter_tbl = self.enter_event_tbl
-    if next(enter_tbl) then
-        print(sFmt("%s enter %s",self.m_ID,api.table_str(enter_tbl)))
-        for uuid,pkg in pairs(enter_tbl) do
-            self:enter_aoi(uuid, pkg)
-        end
-    end
-    local leave_tbl = self.leave_event_tbl
-    if next(leave_tbl) then
-        print(sFmt("%s leave %s",self.m_ID,api.table_str(leave_tbl)))
-        for uuid,pkg in pairs(leave_tbl) do
-            self:leave_aoi(uuid, pkg)
-        end
-    end
 end
 
 function Object:desc()
@@ -143,8 +103,8 @@ function Scene:init(mArgs)
     self.m_AoiType = mArgs.aoi_type
     self.m_EnterAoiCnt = 0
     self.m_LeaveAoiCnt = 0
-    self.m_SyncInterval = mArgs.sync_interval
-    sync_interval = self.m_SyncInterval
+    self.m_MultiUpdateType = mArgs.multi_update_type
+    self.m_DirtyObjIds = {}
     print(sFmt("---create %s---",self:desc()))
 end
 
@@ -162,7 +122,6 @@ function Scene:add_obj(id, x, z)
     self.m_Objects[obj.m_ID] = obj
     print(sFmt("\n----%s enter scene---",obj:desc()))
     local ret = self.m_CAoiMgr:add(obj.m_ID, x, z)
-    -- print("enter ",id,x,z,api.table_str(ret or {}))
     if ret then
         for uuid in pairs(ret) do
             local o = self:get_obj(uuid)
@@ -173,9 +132,57 @@ function Scene:add_obj(id, x, z)
 end
 
 function Scene:update()
-    for id,obj in pairs(self.m_Objects) do
-        obj:handle_event()
+    if self.m_MultiUpdateType == 1 then
+        for id in pairs(self.m_DirtyObjIds) do
+            local obj = self.m_Objects[id]
+            if obj then
+                local x = obj.m_Pos["x"]
+                local z = obj.m_Pos["z"]
+                local ret = self.m_CAoiMgr:update(id, x, z)
+                if ret then
+                    local leave_tbl, enter_tbl = table.unpack(ret)
+                    for uuid in pairs(enter_tbl) do
+                        local o = self:get_obj(uuid)
+                        obj:enter_aoi(uuid, o:desc())
+                        o:enter_aoi(id, obj:desc())
+                    end
+                    for uuid in pairs(leave_tbl) do
+                        local o = self:get_obj(uuid)
+                        obj:leave_aoi(uuid, o:desc())
+                        o:leave_aoi(id, obj:desc())
+                    end
+                end
+            end
+        end
+    elseif self.m_MultiUpdateType == 2 then
+        local updatelst = {}
+        for id in pairs(self.m_DirtyObjIds) do
+            local obj = self.m_Objects[id]
+            if obj then
+                table.insert(updatelst, id)
+                table.insert(updatelst, obj.m_Pos["x"])
+                table.insert(updatelst, obj.m_Pos["z"])
+            end
+        end
+        if next(updatelst) then
+            local ret = self.m_CAoiMgr:update_multi(updatelst)
+            for _,info in pairs(ret) do
+                local id,leave_tbl,enter_tbl = table.unpack(info)
+                local obj = self.m_Objects[id]
+                for uuid in pairs(enter_tbl) do
+                    local o = self:get_obj(uuid)
+                    obj:enter_aoi(uuid, o:desc())
+                    o:enter_aoi(id, obj:desc())
+                end
+                for uuid in pairs(leave_tbl) do
+                    local o = self:get_obj(uuid)
+                    obj:leave_aoi(uuid, o:desc())
+                    o:leave_aoi(id, obj:desc())
+                end
+            end
+        end
     end
+    self.m_DirtyObjIds = {}
 end
 
 function Scene:move_obj(id, x, z)
@@ -183,32 +190,22 @@ function Scene:move_obj(id, x, z)
     local obj = self:get_obj(id)
     print(sFmt("\n----%s move to (%d,%d)----",obj:desc(),x,z))
     obj:set_pos(x, z)
+    if self.m_MultiUpdateType then
+        self.m_DirtyObjIds[id] = true
+        return
+    end
     local ret = self.m_CAoiMgr:update(id, x, z)
-    -- print("move ",id,x,z,api.table_str(ret or {}))
     if ret then
         local leave_tbl, enter_tbl = table.unpack(ret)
-        if self.m_SyncInterval then
-            for uuid in pairs(enter_tbl) do
-                local o = self:get_obj(uuid)
-                obj:push_event("enter_aoi", o)
-                o:push_event("enter_aoi",obj)
-            end
-            for uuid in pairs(leave_tbl) do
-                local o = self:get_obj(uuid)
-                obj:push_event("leave_aoi", o)
-                o:push_event("leave_aoi",obj)
-            end
-        else
-            for uuid in pairs(enter_tbl) do
-                local o = self:get_obj(uuid)
-                obj:enter_aoi(uuid, o:desc())
-                o:enter_aoi(id, obj:desc())
-            end
-            for uuid in pairs(leave_tbl) do
-                local o = self:get_obj(uuid)
-                obj:leave_aoi(uuid, o:desc())
-                o:leave_aoi(id, obj:desc())
-            end
+        for uuid in pairs(enter_tbl) do
+            local o = self:get_obj(uuid)
+            obj:enter_aoi(uuid, o:desc())
+            o:enter_aoi(id, obj:desc())
+        end
+        for uuid in pairs(leave_tbl) do
+            local o = self:get_obj(uuid)
+            obj:leave_aoi(uuid, o:desc())
+            o:leave_aoi(id, obj:desc())
         end
     end
 end
@@ -219,21 +216,11 @@ function Scene:del_obj(id)
     self.m_Objects[id] = nil
     print(sFmt("\n----%s leave scene---",obj:desc()))
     local ret = self.m_CAoiMgr:delete(id)
-    -- print("delete aoi",id,api.table_str(ret or {}))
     if ret then
-        if self.m_SyncInterval then
-            for oid in pairs(ret) do
-                local o = self:get_obj(oid)
-                o:push_event("leave_aoi", obj)
-                obj:push_event("leave_aoi", o)
-            end
-            obj:handle_event()
-        else
-            for oid in pairs(ret) do
-                local o = self:get_obj(oid)
-                o:leave_aoi(id, obj:desc())
-                obj:leave_aoi(oid, o:desc())
-            end
+        for oid in pairs(ret) do
+            local o = self:get_obj(oid)
+            o:leave_aoi(id, obj:desc())
+            obj:leave_aoi(oid, o:desc())
         end
     end
     obj:release()

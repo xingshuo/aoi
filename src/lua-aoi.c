@@ -83,18 +83,17 @@ aoi_update(lua_State* L) {
     if (obj->x == x && obj->z == z) {
         return 0;
     }
+    int new_row = z/m->view_z;
+    int new_col = x/m->view_x;
+    tower* new_t = get_tower(m, new_row, new_col);
+    if (!new_t) {
+        return 0;
+    }
     int old_row = obj->z/m->view_z;
     int old_col = obj->x/m->view_x;
     obj->x = x;
     obj->z = z;
-    int new_row = z/m->view_z;
-    int new_col = x/m->view_x;
     if (new_row == old_row && new_col == old_col) {
-        return 0;
-    }
-    
-    tower* new_t = get_tower(m, new_row, new_col);
-    if (!new_t) {
         return 0;
     }
     delete_obj_from_tower(NULL, obj);
@@ -152,6 +151,113 @@ aoi_update(lua_State* L) {
         }
     }
     lua_rawset(L, -3);
+    return 1;
+}
+
+static int
+aoi_update_multi(lua_State* L) {
+    map* m = check_aoi(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    lua_newtable(L);
+    lua_pushnil(L);
+    int idx = 1;
+    int stack_pos = 1;
+    uint64_t id;
+    float x,z;
+    while (lua_next(L, 2) != 0){
+        if (idx == 1) {
+            id = luaL_checkinteger(L, -1);
+            idx = 2;
+        }else if (idx == 2) {
+            x = luaL_checknumber(L, -1);
+            idx = 3;
+        }else if (idx == 3){
+            z = luaL_checknumber(L, -1);
+            idx = 1;
+            object* obj = map_query_object(m, id);
+            if (!obj){
+                lua_pop(L, 1);
+                continue;
+            }
+            int new_row = z/m->view_z;
+            int new_col = x/m->view_x;
+            tower* new_t = get_tower(m, new_row, new_col);
+            if (!new_t) {
+                lua_pop(L, 1);
+                continue;
+            }
+            int old_row = obj->pTower->row;
+            int old_col = obj->pTower->col;
+            if (new_row == old_row && new_col == old_col) {
+                lua_pop(L, 1);
+                continue;
+            }
+
+            lua_pushinteger(L,stack_pos++);
+            lua_newtable(L);
+
+            lua_pushinteger(L,1);
+            lua_pushinteger(L,id);
+            lua_rawset(L, -3);
+            
+            lua_pushinteger(L,2);
+            lua_newtable(L);
+            delete_obj_from_tower(NULL, obj);
+            insert_obj_to_tower(new_t, obj);
+            int i,j;
+            for (i=-m->aoi_r; i<=m->aoi_r; i++) {
+                for (j=-m->aoi_r; j<=m->aoi_r; j++){
+                    int r = old_row + i;
+                    int c = old_col + j;
+                    tower* t = get_tower(m, r, c);
+                    if (!t) {
+                        continue;
+                    }
+                    if ((abs(new_row-r)>m->aoi_r) || (abs(new_col-c)>m->aoi_r)) {
+                        object* pCur = t->pHead->pNext;
+                        while (pCur != t->pHead) {
+                            if (pCur->id != id) {
+                                lua_pushinteger(L,pCur->id);
+                                lua_pushinteger(L,1);
+                                lua_rawset(L,-3);
+                            }
+                            pCur = pCur->pNext;
+                        }
+                    }
+                }
+            }
+            lua_rawset(L, -3);
+
+            lua_pushinteger(L,3);
+            lua_newtable(L);
+            for (i=-m->aoi_r; i<=m->aoi_r; i++) {
+                for (j=-m->aoi_r; j<=m->aoi_r; j++){
+                    int r = new_row + i;
+                    int c = new_col + j;
+                    tower* t = get_tower(m, r, c);
+                    if (!t) {
+                        continue;
+                    }
+                    if ((abs(old_row-r)>m->aoi_r) || (abs(old_col-c)>m->aoi_r)) {
+                        object* pCur = t->pHead->pNext;
+                        while (pCur != t->pHead) {
+                            if (pCur->id != id) {
+                                lua_pushinteger(L,pCur->id);
+                                lua_pushinteger(L,1);
+                                lua_rawset(L,-3);
+                            }
+                            pCur = pCur->pNext;
+                        }
+                    }
+                }
+            }
+            lua_rawset(L, -3);
+
+            lua_rawset(L, -5);
+        }
+
+        lua_pop(L, 1);
+    }
     return 1;
 }
 
@@ -303,6 +409,7 @@ int luaopen_aoi(lua_State* L) {
     luaL_Reg l2[] = {
         {"add", aoi_add},
         {"update", aoi_update},
+        {"update_multi", aoi_update_multi},
         {"delete", aoi_delete},
         {"get_pos_nearby_objs", aoi_get_pos_nearby_objs},
         {"get_obj_nearby_objs", aoi_get_obj_nearby_objs},
